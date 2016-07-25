@@ -65,8 +65,6 @@ function user-area()
 ############## Check how many boards per user haved ###############################
 function user_boards()
 {
-    echo "boards no: 100 is 1610(1) boards, 101 is expander boards,102 is 1610(2) boards"
-    echo "130-135 is 1612_boards(D03 board)  104 is overdrive board  18,19,20 is D01 board  others boars is D02 board"
     echo "all usrs possessed boards details as following :"
     printf "%10s: -> Boards list \n" "Board usrs"
     all_users=($(get_all_users_name))
@@ -83,7 +81,10 @@ function usage()
 {
     cat <<-EOF
 Usage:
-execute "board_report --statistic" or "board_report -S" to report boards used statistic of openlab over the past week
+execute "board_report -S time_stard time_end" to report boards used statistic of openlab over a period time
+e.g. board_report -S 0d 10d mean to see the use of board in past 10 days
+     board_report -S 1d 10d mean to see the use of board in past 10 days to past 1 day
+     board_report -S 0d 1m mean to see the use of board in past 1 month
 execute "board_report --status" or "board_report -s" to check the current usage of all the boards
 execute "board_report --board-users" or "board_report -U" to check all the boards are owned by which user
 execute "board_report --user-org" or "board_report -O" to　check how many people are there in each organization
@@ -99,8 +100,21 @@ fi
 
 case $1 in
     --statistic | -S)
-		# FIXME need two arguments to call the funcion
-        board_used_log_parse
+        if [ $# != 3 ];then
+            echo "You should enter three argument, e.g: board_report -S 0d 10d"
+            exit 1
+        fi
+        shift
+        time_start=$1
+        shift
+        time_end=$1
+        board_used_log_parse $time_start $time_end
+        start_day=$(get_day $time_start)
+        end_day=$(get_day $time_end)
+        if [ $start_day -gt $end_day ];then
+            echo "start time is less than end time, please check and rewrite!"
+            exit 1
+        fi  
         ;;
     --status | -s)
         status

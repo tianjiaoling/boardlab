@@ -9,13 +9,62 @@ source $OPENLAB_TOPDIR/Include/bmcop.sh
 source $OPENLAB_TOPDIR/Include/board_serial_op.sh
 source $OPENLAB_TOPDIR/Include/board_power_op.sh
 source $OPENLAB_TOPDIR/Include/pduop.sh
+source $OPENLAB_TOPDIR/Include/board_log_op.sh
+
+# get_day $1
+# $1 day expr, e.g. '1', '1d', '1m', '1y'
+# return day num from day expr string
+get_day()
+{
+	local day_expr=$1
+	local index=$((${#day_expr} - 1))
+	local unit=${day_expr:$index}
+
+	local times=0;
+	case $unit in
+		'y')
+			times=365
+			;;
+		'm')
+			times=30
+			;;
+		*)
+			times=1
+			;;
+	esac
+
+	local num=$(echo $day_expr | grep -Po '[0-9]*')
+	echo -e $(($num * $times))
+}
 
 # select log files of a period time specified by user
 # select_log_files $1 $2
 # $1 for start time and $2 for end time
 select_log_files()
 {
-	#TODO
+	local time_start=$1
+	local time_end=$2
+	start_day=$(get_day $time_start)
+	end_day=$(get_day $time_end)
+	#min_file_num=$((start_day == 0 ? 1 : start_day))
+    if [ "$start_day"x = "0"x ]; then
+        min_file_num=1
+    else
+        min_file_num=$start_day
+    fi
+	max_file_num=$end_day
+	local log_files=$(ls $OPENLAB_LOG_DIR)
+    for ((i=min_file_num; i<=max_file_num; i++))
+    do
+        file=$(echo -e "$log_files" | grep -w "${BOARD_USED_LOG_FILE}.${i}")
+        if [ -n "$file" ];then
+            select_files[n]=$file
+            let n=n+1
+		else
+			break
+        fi
+	done
+	echo ${select_files[@]}
 }
 
 board_used_log_parse()
@@ -27,7 +76,7 @@ board_used_log_parse()
 	local time_start=$1
 	local time_end=$2
 	local log_files=$(select_log_files $time_start $time_end)
-
+    
 	local count=0
 	local total_time=0
 	for file in $log_files;
@@ -38,8 +87,7 @@ board_used_log_parse()
 
 	let "count -= 1"
 	let total_time=24*3600*$count
-
-	if [ $time_start -eq 0 ]; then
+	if [ $time_start == x"0" ]; then
 		# get current day used time
 		local CUR_DAY_START=$(sed -n '1p' $LOG_FILE | cut -d ":" -f2)
 		local CUR_DAY_NOW=$(date +%s)
