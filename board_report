@@ -81,15 +81,16 @@ function usage()
 {
     cat <<-EOF
 Usage:
-execute "board_report -S time_stard time_end" to report boards used statistic of openlab over a period time
-e.g. board_report -S 0d 10d mean to see the use of board in past 10 days
-     board_report -S 1d 10d mean to see the use of board in past 10 days to past 1 day
-     board_report -S 0d 1m mean to see the use of board in past 1 month
-execute "board_report --status" or "board_report -s" to check the current usage of all the boards
-execute "board_report --board-users" or "board_report -U" to check all the boards are owned by which user
-execute "board_report --user-org" or "board_report -O" to　check how many people are there in each organization
-execute "board_report --user-area" or "board_report -A" to check how many people are there in each area
-execute "board_report --user-boards" or "board_report -B" to check how many boards per user haved been allocated
+$0 <[-S <time_start> <time_end>] | [-s|--status] | [-U|--board-users] | [-O|--user-org] | [-A|--user-area] | [-B|user-boards]>
+execute "$0 -S time_stard time_end" to report boards used statistic of openlab over a period time
+e.g. $0 -S 0d 10d mean to check the use of board in past 10 days
+     $0 -S 1d 10d mean to check the use of board in past 10 days to past 1 day
+     $0 -S 0d 1m mean to check the use of board in past 1 month
+execute "$0 --status" or "$0 -s" to check the current usage of all the boards
+execute "$0 --board-users" or "$0 -U" to check all the boards are owned by which user
+execute "$0 --user-org" or "$0 -O" to　check how many people are there in each organization
+execute "$0 --user-area" or "$0 -A" to check how many people are there in each area
+execute "$0 --user-boards" or "$0 -B" to check how many boards per user haved been allocated
 EOF
 }
 
@@ -101,20 +102,16 @@ fi
 case $1 in
     --statistic | -S)
         if [ $# != 3 ];then
-            echo "You should enter three argument, e.g: board_report -S 0d 10d"
+            echo "You should input three arguments, e.g: board_report -S 0d 10d"
             exit 1
         fi
+
         shift
         time_start=$1
         shift
         time_end=$1
+
         board_used_log_parse $time_start $time_end
-        start_day=$(get_day $time_start)
-        end_day=$(get_day $time_end)
-        if [ $start_day -gt $end_day ];then
-            echo "start time is less than end time, please check and rewrite!"
-            exit 1
-        fi  
         ;;
     --status | -s)
         status
